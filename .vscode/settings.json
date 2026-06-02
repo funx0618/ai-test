@@ -1,0 +1,9 @@
+{
+    "python.defaultInterpreterPath": "D:\\AI22Test\\.venv\\Scripts\\python.exe",
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.terminal.activateEnvironment": true,
+    "python.testing.unittestEnabled": false
+}

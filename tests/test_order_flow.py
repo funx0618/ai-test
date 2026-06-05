@@ -88,7 +88,7 @@ def test_add_to_cart(page: Page):
 	for idx, name in enumerate(products_to_add):
 		product = page.locator(".single-products").filter(
 			has=page.get_by_text(name)
-		)
+		).first
 		product.hover()
 		product.locator(".product-overlay .add-to-cart").click()
 		expect(page.get_by_text("Added!")).to_be_visible()
@@ -209,8 +209,89 @@ def test_category(page: Page):
 
 
 
+def test_price(page):
+	page.goto("https://automationexercise.com/", wait_until="domcontentloaded")
+	page.get_by_text("Signup / Login").click()
+	page.wait_for_url("**/login")
+	page.locator("[data-qa='login-email']").fill("agent01@qq.com")
+	page.locator("[data-qa='login-password']").fill("123456")
+	page.get_by_role("button", name="Login").click()
+
+	product = page.locator(".product-image-wrapper").filter(
+        has=page.get_by_text("Sleeves Printed Top - White")
+    )
+	product.get_by_text("View Product").click()
+
+	quantity_input = page.locator("#quantity")
+	quantity_input.fill("2")
+
+	page.locator("button.cart").click()
+
+	page.get_by_role("link", name="View Cart").click()
+
+	product_row = page.locator("tr").filter(
+	has=page.get_by_text("Sleeves Printed Top - White")
+	)
+
+	price_text = product_row.locator(".cart_price p").inner_text()
+	price = int(price_text.replace("Rs. ", ""))
+
+	quantity_text = product_row.locator(".cart_quantity button").inner_text()
+	quantity = int(quantity_text)
+
+	total_text = product_row.locator(".cart_total p").inner_text()
+	total_price = int(total_text.replace("Rs. ", ""))
+
+	assert total_price == price * quantity, (
+	f"Expected {price * quantity}, Actual {total_price}"
+	)
+
+ 
+
+def test_add_cancel(page):
+	page.goto("https://automationexercise.com/", wait_until="domcontentloaded")
+	page.get_by_text("Signup / Login").click()
+	page.wait_for_url("**/login")
+	page.locator("[data-qa='login-email']").fill("agent01@qq.com")
+	page.locator("[data-qa='login-password']").fill("123456")
+	page.get_by_role("button", name="Login").click()
+
+	# Go to Products (All Products)
+	page.get_by_role("link", name="Products").click()
+	expect(page).to_have_url(re.compile(r".*/products"))
+
+	page.locator("#search_product").fill("Summer White Top")
+	page.locator("#submit_search").click()
+
+	# 4. 定位商品卡片（只取一个）
+	product = page.locator(".product-image-wrapper").filter(
+		has_text="Summer White Top"
+	).first
+
+	# hover + add to cart
+	product.hover()
+	product.locator(".product-overlay .add-to-cart").click()
 
 
+	# View Cart
+	page.locator("text=View Cart").click()
+
+	# Verify product exists
+	cart_row = page.locator("tr").filter(
+		has_text="Summer White Top"
+	)
+
+	expect(cart_row).to_be_visible()
+
+	# Delete product
+	cart_row.locator(".cart_quantity_delete").click()
+
+	# Verify removed
+	expect(
+		page.locator("tr").filter(
+			has_text="Summer White Top"
+		)
+	).to_have_count(0)
 
 
 

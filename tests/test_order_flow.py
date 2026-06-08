@@ -81,7 +81,7 @@ def test_add_to_cart(page: Page):
 
 	# Go to Products (All Products)
 	page.get_by_role("link", name="Products").click()
-	expect(page).to_have_url(re.compile(r".*/products"))
+	expect(page).to_have_url(r".*/login")
 
 	# Select two specific products via overlay: Men Tshirt, Stylish Dress
 	products_to_add = ["Men Tshirt", "Stylish Dress"]
@@ -97,13 +97,13 @@ def test_add_to_cart(page: Page):
 			expect(page).to_have_url(re.compile(r".*/products"))
 		else:
 			page.get_by_text("View Cart").click()
-			expect(page).to_have_url(re.compile(r".*/view_cart"))
+			expect(page).to_have_url(r".*/login")
 
 	# Proceed to checkout and place order (reuse same flow)
 	page.get_by_text("Proceed To Checkout").first.click()
 	expect(page).to_have_url(re.compile(r".*/checkout"))
 	page.get_by_role("link", name="Place Order").click()
-	expect(page).to_have_url(re.compile(r".*/payment"))
+	expect(page).to_have_url(r".*/login")
 
 	# Fill payment form using data-qa selectors (hyphenated names)
 	page.locator("[data-qa='name-on-card']").fill("funx")
@@ -209,7 +209,7 @@ def test_category(page: Page):
 
 
 
-def test_price(page):
+def test_price(page: Page):
 	page.goto("https://automationexercise.com/", wait_until="domcontentloaded")
 	page.get_by_text("Signup / Login").click()
 	page.wait_for_url("**/login")
@@ -248,7 +248,7 @@ def test_price(page):
 
  
 
-def test_add_cancel(page):
+def test_add_cancel(page: Page):
 	page.goto("https://automationexercise.com/", wait_until="domcontentloaded")
 	page.get_by_text("Signup / Login").click()
 	page.wait_for_url("**/login")
@@ -295,3 +295,89 @@ def test_add_cancel(page):
 
 
 
+
+
+def test_login_while_checkout(page: Page):
+	# 1. 打开首页
+	page.goto("https://automationexercise.com", wait_until="domcontentloaded")
+
+	# 进入 Products 页面
+	page.get_by_role("link", name="Products").click()
+	expect(page).to_have_url(re.compile(r".*/products"))
+
+	# 搜索商品
+	if page.locator("#search_product").count() > 0:
+		page.locator("#search_product").fill("Fancy Green Top")
+		page.locator("#submit_search").click()
+	else:
+		page.get_by_placeholder("Search Products").fill("Fancy Green Top")
+		page.get_by_role("button", name="Search").click()
+
+	# 定位商品卡片
+	card = page.locator(".product-image-wrapper").filter(
+		has_text="Fancy Green Top"
+	).first
+	expect(card).to_be_visible()
+
+	# Hover 显示 overlay
+	card.hover()
+
+	# 点击 Add To Cart
+	add_to_cart_btn = card.locator(".product-overlay .add-to-cart")
+	if add_to_cart_btn.count() == 0:
+		add_to_cart_btn = card.locator("button:has-text('Add to cart')")
+	expect(add_to_cart_btn).to_be_visible()
+	add_to_cart_btn.click()
+
+	# Added 弹窗
+	expect(page.get_by_text("Added!")).to_be_visible()
+
+	# View Cart
+	page.get_by_text("View Cart").click()
+	expect(page).to_have_url(re.compile(r".*/view_cart"))
+
+	# 2. Proceed To Checkout
+	page.locator("a.btn.btn-default.check_out").click()
+	expect(page.locator(".modal-content")).to_be_visible()
+
+	# 验证 Checkout Modal 并点击 Register / Login
+	page.get_by_role("link", name="Register / Login").click()
+	expect(page).to_have_url(re.compile(r".*/login"))
+
+	# 登录
+	page.locator("input[data-qa='login-email']").fill("agent01@qq.com")
+	page.locator("input[data-qa='login-password']").fill("123456")
+	if page.locator("button[data-qa='login-button']").count() > 0:
+		page.locator("button[data-qa='login-button']").click()
+	else:
+		page.get_by_role("button", name="Login").click()
+
+	# 验证登录成功
+	expect(page.get_by_text("Logged in as")).to_be_visible()
+
+	# 返回购物车并继续下单
+	page.get_by_role("link", name="Cart").click()
+	expect(page).to_have_url(re.compile(r".*/view_cart"))
+
+	page.locator("a.btn.btn-default.check_out").click()
+	# 前往支付
+	if page.get_by_role("link", name="Place Order").count() > 0:
+		page.get_by_role("link", name="Place Order").click()
+	else:
+		page.locator("a[href='/payment']").click()
+	expect(page).to_have_url(re.compile(r".*/payment"))
+
+	# 填写支付信息并支付
+	page.locator("input[data-qa='name-on-card']").fill("Agent Tester")
+	page.locator("input[data-qa='card-number']").fill("4111111111111111")
+	page.locator("input[data-qa='cvc']").fill("123")
+	page.locator("input[data-qa='expiry-month']").fill("12")
+	page.locator("input[data-qa='expiry-year']").fill("2030")
+	if page.locator("button[data-qa='pay-button']").count() > 0:
+		page.locator("button[data-qa='pay-button']").click()
+	else:
+		page.get_by_role("button", name="Pay and Confirm Order").click()
+
+	# 验证下单成功
+	success_msg = page.get_by_text("Congratulations! Your order has been confirmed!")
+	expect(success_msg).to_be_visible()

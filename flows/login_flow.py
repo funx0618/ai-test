@@ -84,3 +84,7 @@ class LoginFlow:
         self.login_page.delete_account()
         self.login_page.expect_account_deleted()
         self.login_page.continue_after_delete()
+
+    def verify_login_error(self) -> None:
+        """验证登录失败提示"""
+        self.login_page.expect_login_error()

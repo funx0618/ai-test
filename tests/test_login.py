@@ -70,5 +70,23 @@ def test_delete_user(page):
     login_flow.delete_account()
 
 
+def test_login_error(page):
+    login_flow = LoginFlow(page)
+
+    # 情况1：错误的密码
+    login_flow.login_as(
+        email="agent01@qq.com",
+        password="1234",
+    )
+    login_flow.verify_login_error()
+
+    # 情况2：错误的 email
+    login_flow.login_as(
+        email="wrong@qq.com",
+        password="123456",
+    )
+    login_flow.verify_login_error()
+
+
 
 

@@ -144,4 +144,9 @@ class LoginPage(BasePage):
 
     def continue_after_delete(self) -> None:
         self.page.get_by_role("link", name="Continue").click()
-        self.page.wait_for_url("**/")
+        self.page.wait_for_url("**/", wait_until="domcontentloaded")
+
+    def continue_after_register(self) -> None:
+        """注册成功后点击 Continue 进入首页"""
+        self.page.get_by_role("link", name="Continue").click()
+        self.page.wait_for_url("**/", wait_until="domcontentloaded")

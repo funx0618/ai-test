@@ -48,5 +48,27 @@ def test_register_user(page):
     login_flow.verify_register_success()
 
 
+def test_delete_user(page):
+    login_flow = LoginFlow(page)
+
+    # Step 1: 注册新用户
+    login_flow.signup(
+        name="agent10",
+        email="agent10@qq.com",
+    )
+
+    # Step 2: 验证注册成功（注册后网站自动登录）
+    login_flow.verify_register_success()
+
+    # Step 3: 点击 Continue 进入首页
+    login_flow.login_page.continue_after_register()
+
+    # Step 4: 验证已登录状态
+    login_flow.verify_login(username="agent10")
+
+    # Step 5: 删除账户并验证删除成功
+    login_flow.delete_account()
+
+
 
 

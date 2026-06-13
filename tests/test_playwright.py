@@ -12,4 +12,3 @@ def test_image():
         )
         page.get_by_alt_text("Sauce Labs Fleece Jacket").click()
         # page.get_by_role("image", name="Sauce Labs Fleece Jacket").click()
-

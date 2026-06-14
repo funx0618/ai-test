@@ -61,6 +61,11 @@ class ProductFlow:
         assert quantity == expected_quantity, f"Expected quantity {expected_quantity}, got {quantity}"
         assert total == price * quantity, f"Expected {price * quantity}, got {total}"
 
+    def verify_checkout_total_amount(self, *product_names: str) -> None:
+        """验证 checkout 页面的 Total Amount 等于各商品 cart total 之和"""
+        expected = sum(self.product_page.get_cart_total(name) for name in product_names)
+        self.product_page.expect_checkout_total_amount(expected)
+
     # ========== 删除商品 ==========
     def remove_product_from_cart(self, product_name: str) -> None:
         """从购物车删除商品并验证已删除"""
@@ -81,11 +86,14 @@ class ProductFlow:
         expiry_month: str = "06",
         expiry_year: str = "2030",
         download_invoice: bool = False,
+        expected_total_amount: int | None = None,
     ) -> None:
-        """完整结算流程：进入购物车 → 结算 → 支付 → 验证下单成功"""
+        """完整结算流程：进入购物车 → 结算 → 验证金额 → 支付 → 验证下单成功"""
         if not re.search(r"/view_cart", self.page.url):
             self.product_page.view_cart()
         self.product_page.proceed_to_checkout()
+        if expected_total_amount is not None:
+            self.product_page.expect_checkout_total_amount(expected_total_amount)
         self.product_page.place_order()
         self.product_page.fill_payment(
             name=name,

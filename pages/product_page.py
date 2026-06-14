@@ -128,6 +128,19 @@ class ProductPage(BasePage):
         self.page.get_by_text("Proceed To Checkout").first.click()
         expect(self.page).to_have_url(re.compile(r".*/checkout"))
 
+    def get_checkout_total_amount(self) -> int:
+        """获取 checkout 页面的 Total Amount 金额"""
+        total_row = self.page.locator("td").filter(has_text="Total Amount")
+        amount_text = total_row.locator("xpath=following-sibling::td").inner_text()
+        return int(amount_text.replace("Rs. ", ""))
+
+    def expect_checkout_total_amount(self, expected_amount: int) -> None:
+        """验证 checkout 页面的 Total Amount 等于预期值"""
+        actual = self.get_checkout_total_amount()
+        assert actual == expected_amount, (
+            f"Expected Total Amount Rs. {expected_amount}, got Rs. {actual}"
+        )
+
     def place_order(self) -> None:
         """点击 Place Order 进入支付页"""
         self.page.get_by_role("link", name="Place Order").click()

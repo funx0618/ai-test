@@ -39,5 +39,8 @@ def test_check_out(logged_in_page):
     product_flow.verify_cart_price("Stylish Dress", expected_quantity=1)
     product_flow.verify_cart_price("Sleeves Top and Short - Blue & Pink", expected_quantity=1)
 
-    # Step 5: 下单并支付，下载小票
-    product_flow.checkout_and_pay(download_invoice=True)
+    # Step 5: 下单并支付（含 Total Amount 验证），下载小票
+    stylish_total = product_flow.product_page.get_cart_total("Stylish Dress")
+    sleeves_total = product_flow.product_page.get_cart_total("Sleeves Top and Short - Blue & Pink")
+    expected_total = stylish_total + sleeves_total
+    product_flow.checkout_and_pay(download_invoice=True, expected_total_amount=expected_total)

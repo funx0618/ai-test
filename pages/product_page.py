@@ -137,6 +137,10 @@ class ProductPage(BasePage):
         """从购物车删除商品"""
         self.get_cart_row(product_name).locator(".cart_quantity_delete").click()
 
+    def is_cart_has_items(self) -> bool:
+        """判断购物车中是否有商品"""
+        return self.page.locator(".cart_quantity_delete").count() > 0
+
     def clear_cart(self) -> None:
         """清空购物车所有商品"""
         delete_buttons = self.page.locator(".cart_quantity_delete")
@@ -144,6 +148,14 @@ class ProductPage(BasePage):
             first_btn = delete_buttons.first
             first_btn.click()
             expect(first_btn).to_be_hidden()
+
+    def click_here_to_products(self) -> None:
+        """点击空购物车页面中的 here 链接，跳转到产品页"""
+        self.page.get_by_role("link", name="here").click()
+
+    def expect_on_products_page(self) -> None:
+        """验证当前在产品列表页"""
+        expect(self.page).to_have_url(re.compile(r".*\/products"))
 
     def get_cart_price(self, product_name: str) -> int:
         """获取购物车中商品单价"""

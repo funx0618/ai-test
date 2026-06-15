@@ -74,9 +74,10 @@ class ProductFlow:
         self.product_page.expect_product_not_in_cart(product_name)
 
     def clear_cart(self) -> None:
-        """打开购物车并清空所有商品"""
+        """打开购物车，如果有商品则清空"""
         self.product_page.open_cart()
-        self.product_page.clear_cart()
+        if self.product_page.is_cart_has_items():
+            self.product_page.clear_cart()
 
     # ========== 结算流程 ==========
     def checkout_and_pay(

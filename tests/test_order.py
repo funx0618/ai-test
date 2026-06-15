@@ -50,6 +50,25 @@ def test_check_out(logged_in_page):
     product_flow.product_page.continue_after_order()
 
 
+def test_empty_cart(logged_in_page):
+    """验证空购物车逻辑：清空购物车后点击 here 链接进入产品页"""
+    page = logged_in_page
+    product_flow = ProductFlow(page)
+
+    # Step 1: 点击导航栏 Cart 按钮进入购物车
+    product_flow.product_page.go_to_cart()
+
+    # Step 2: 如果购物车中有商品，则清空
+    if product_flow.product_page.is_cart_has_items():
+        product_flow.product_page.clear_cart()
+
+    # Step 3: 点击 here 链接进入产品页
+    product_flow.product_page.click_here_to_products()
+
+    # Step 4: 验证已跳转到产品页
+    product_flow.product_page.expect_on_products_page()
+
+
 def test_product_detail_review_and_add_to_cart(logged_in_page, default_user):
     """商品详情页：调整数量、提交评论、加入购物车并验证"""
     page = logged_in_page

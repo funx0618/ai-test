@@ -88,5 +88,19 @@ def test_login_error(page):
     login_flow.verify_login_error()
 
 
+def test_logout(page):
+    login_flow = LoginFlow(page)
+
+    # Step 1: 登录
+    login_flow.login_as(
+        email="agent01@qq.com",
+        password="123456",
+    )
+    login_flow.verify_login(username="agent01")
+
+    # Step 2: 点击 Logout，验证回到登录页
+    login_flow.logout()
+
+
 
 

@@ -27,6 +27,7 @@ DEFAULT_USER = {
 }
 
 
+
 @pytest.fixture
 def default_user() -> dict:
     """返回默认测试用户信息。"""

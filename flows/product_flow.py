@@ -108,6 +108,18 @@ class ProductFlow:
         if download_invoice:
             self.product_page.download_invoice()
 
+    def verify_brands_product_count(self) -> None:
+        """验证每个品牌侧边栏显示的数量与品牌页面实际商品数一致"""
+        brands = self.product_page.get_brands_info()
+        for brand in brands:
+            url = brand["href"] if brand["href"].startswith("http") \
+                else f"{self.product_page.BASE_URL}{brand['href']}"
+            self.page.goto(url, wait_until="domcontentloaded")
+            actual = self.product_page.get_brand_page_product_count()
+            assert actual == brand["count"], (
+                f"Brand '{brand['name']}': expected {brand['count']}, got {actual}"
+            )
+
     def verify_order_placed(self) -> None:
         """验证下单成功"""
         self.product_page.expect_order_placed()

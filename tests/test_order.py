@@ -77,3 +77,39 @@ def test_product_detail_review_and_add_to_cart(logged_in_page, default_user):
     product_flow.verify_product_in_cart(product_name)
     assert product_flow.product_page.get_cart_quantity(product_name) == 2
 
+
+def test_remove_product_from_cart(logged_in_page):
+    """从购物车中删除商品并验证"""
+    page = logged_in_page
+    product_flow = ProductFlow(page)
+
+    # Step 0: 清空购物车
+    product_flow.clear_cart()
+
+    # Step 1: 添加两件商品到购物车
+    product_flow.add_product_to_cart("Stylish Dress", continue_shopping=True)
+    product_flow.add_product_to_cart("Sleeves Top and Short - Blue & Pink", continue_shopping=False)
+    product_flow.product_page.view_cart()
+
+    # Step 2: 验证两件商品都在购物车中
+    product_flow.verify_product_in_cart("Stylish Dress")
+    product_flow.verify_product_in_cart("Sleeves Top and Short - Blue & Pink")
+
+    # Step 3: 删除 Stylish Dress
+    product_flow.remove_product_from_cart("Stylish Dress")
+
+    # Step 4: 验证 Stylish Dress 已删除，另一件仍存在
+    product_flow.verify_product_not_in_cart("Stylish Dress")
+    product_flow.verify_product_in_cart("Sleeves Top and Short - Blue & Pink")
+
+
+def test_brands_count(page):
+    """验证品牌侧边栏显示的数量与品牌页面实际商品数一致"""
+    product_flow = ProductFlow(page)
+
+    # Step 1: 进入产品页（品牌侧边栏在产品页可见）
+    product_flow.open_products()
+
+    # Step 2: 验证每个品牌的数量
+    product_flow.verify_brands_product_count()
+

@@ -210,6 +210,25 @@ class ProductPage(BasePage):
         """验证下单成功"""
         expect(self.page.get_by_text("Order Placed!")).to_be_visible()
 
+    # ========== 品牌 ==========
+    def get_brands_info(self) -> list[dict]:
+        """获取侧边栏所有品牌信息：名称、预期数量、链接"""
+        brands = self.page.locator(".brands-name ul li")
+        result = []
+        for i in range(brands.count()):
+            item = brands.nth(i)
+            a = item.locator("a")
+            href = a.get_attribute("href") or ""
+            count_text = item.locator("span").text_content().strip()
+            expected_count = int(count_text.replace("(", "").replace(")", ""))
+            brand_name = a.text_content().replace(count_text, "").strip()
+            result.append({"name": brand_name, "count": expected_count, "href": href})
+        return result
+
+    def get_brand_page_product_count(self) -> int:
+        """获取当前品牌页面的商品数量"""
+        return self.page.locator(".product-image-wrapper").count()
+
     def expect_product_in_search_results(self, name: str) -> None:
         """验证搜索结果中包含指定商品"""
         products = self.page.locator(".features_items .productinfo p")

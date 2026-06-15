@@ -164,9 +164,13 @@ class ProductPage(BasePage):
 
     # ========== 结算 ==========
     def proceed_to_checkout(self) -> None:
-        """点击 Proceed To Checkout"""
+        """点击 Proceed To Checkout 并等待跳转到结算页"""
         self.page.get_by_text("Proceed To Checkout").first.click()
         expect(self.page).to_have_url(re.compile(r".*/checkout"))
+
+    def click_proceed_to_checkout(self) -> None:
+        """点击 Proceed To Checkout（不验证跳转，适用于未登录时弹窗场景）"""
+        self.page.get_by_text("Proceed To Checkout").first.click()
 
     def get_checkout_total_amount(self) -> int:
         """获取 checkout 页面的 Total Amount 金额"""
@@ -277,6 +281,17 @@ class ProductPage(BasePage):
     def expect_checkout_modal(self) -> None:
         """验证结算弹窗可见（未登录时）"""
         expect(self.page.locator(".modal-content")).to_be_visible()
+
+    def click_register_login_from_modal(self) -> None:
+        """在结算弹窗中点击 Register / Login 链接"""
+        self.expect_checkout_modal()
+        self.page.get_by_role("link", name="Register / Login").click()
+        expect(self.page).to_have_url(re.compile(r".*/login"))
+
+    def go_to_cart(self) -> None:
+        """从导航栏点击 Cart 进入购物车"""
+        self.page.get_by_role("link", name="Cart").click()
+        expect(self.page).to_have_url(re.compile(r".*/view_cart"))
 
     # ========== 发票 ==========
     def download_invoice(self, save_path: str | None = None) -> None:

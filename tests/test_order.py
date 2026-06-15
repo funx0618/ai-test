@@ -5,6 +5,7 @@ test_order.py - 产品 & 订单相关测试
 """
 
 from flows.product_flow import ProductFlow
+from flows.login_flow import LoginFlow
 
 
 def test_product_search(page):
@@ -120,4 +121,31 @@ def test_category(page):
 
     # 验证所有分类页面标题
     product_flow.verify_categories()
+
+
+def test_login_while_checkout(page, default_user):
+    """不登录状态下添加商品，结算时触发登录，完成下单"""
+    product_flow = ProductFlow(page)
+    login_flow = LoginFlow(page)
+
+    # Step 1: 不登录，直接进入产品页搜索并添加商品到购物车
+    product_flow.add_product_to_cart("Fancy Green Top", continue_shopping=False)
+
+    # Step 2: 从弹窗点击 View Cart 进入购物车
+    product_flow.product_page.view_cart()
+
+    # Step 3: 点击 Proceed To Checkout，弹出登录弹窗
+    product_flow.product_page.click_proceed_to_checkout()
+    # 此时应弹出 modal 要求登录
+    product_flow.product_page.click_register_login_from_modal()
+
+    # Step 4: 登录
+    login_flow.login_page.login(default_user["email"], default_user["password"])
+    login_flow.login_page.expect_logged_in(default_user["username"])
+
+    # Step 5: 登录后返回购物车
+    product_flow.product_page.go_to_cart()
+
+    # Step 6: 再次结算并支付
+    product_flow.checkout_and_pay()
 

@@ -203,3 +203,19 @@ def test_register_while_checkout(page):
     # Step 8: 清理 — 删除注册的账户
     login_flow.delete_account()
 
+
+def test_product_subscription(page):
+    """在产品列表页滚动到底部，填写邮箱并订阅，验证成功提示"""
+    product_flow = ProductFlow(page)
+    login_flow = LoginFlow(page)
+
+    # Step 1: 登录
+    login_flow.login_as(
+        email="agent01@qq.com",
+        password="123456",
+    )
+    login_flow.verify_login(username="agent01")
+
+    # Step 2: 进入产品列表页，滚动到底部并订阅
+    product_flow.subscribe_on_products_page(email="2660185828+product@qq.com")
+

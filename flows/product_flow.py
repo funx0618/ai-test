@@ -148,3 +148,11 @@ class ProductFlow:
     def verify_order_placed(self) -> None:
         """验证下单成功"""
         self.product_page.expect_order_placed()
+
+    # ========== 订阅 ==========
+    def subscribe_on_products_page(self, email: str) -> None:
+        """在产品列表页滚动到底部并订阅"""
+        self.open_products()
+        self.product_page.scroll_to_subscription()
+        self.product_page.subscribe(email)
+        self.product_page.expect_subscription_success()

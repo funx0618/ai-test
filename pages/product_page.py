@@ -309,6 +309,26 @@ class ProductPage(BasePage):
         self.page.get_by_role("link", name="Cart").click()
         expect(self.page).to_have_url(re.compile(r".*/view_cart"))
 
+    # ========== 订阅 ==========
+    SUBSCRIBE_EMAIL = "#susbscribe_email"
+    SUBSCRIBE_BTN = "#subscribe"
+
+    def scroll_to_subscription(self) -> None:
+        """滚动到页面底部的订阅区域"""
+        self.page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+        expect(self.page.locator(self.SUBSCRIBE_EMAIL)).to_be_visible()
+
+    def subscribe(self, email: str) -> None:
+        """填写订阅邮箱并点击订阅按钮"""
+        self.page.fill(self.SUBSCRIBE_EMAIL, email)
+        self.page.click(self.SUBSCRIBE_BTN)
+
+    def expect_subscription_success(self) -> None:
+        """验证订阅成功提示"""
+        expect(self.page.locator(".alert-success")).to_contain_text(
+            "You have been successfully subscribed!"
+        )
+
     # ========== 发票 ==========
     def download_invoice(self, save_path: str | None = None) -> str:
         """下载发票，返回保存路径"""

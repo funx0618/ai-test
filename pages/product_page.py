@@ -48,6 +48,14 @@ class ProductPage(BasePage):
     # ========== 商品操作 ==========
     def view_product(self, name: str) -> None:
         """点击指定商品的 View Product 进入详情页"""
+        product = self.page.locator(".product-image-wrapper").filter(
+            has_text=name
+        ).first
+        product.get_by_text("View Product").click()
+        self.page.wait_for_url("**/product_details/*")
+
+    def view_product_first(self) -> None:
+        """点击列表中第一个商品的 View Product 进入详情页"""
         self.page.get_by_text("View Product").first.click()
         self.page.wait_for_url("**/product_details/*")
 
@@ -71,6 +79,37 @@ class ProductPage(BasePage):
 
         self.page.get_by_role("button", name="Add to cart").click()
         expect(self.page.get_by_text("Added!")).to_be_visible()
+
+    # ========== 商品详情页 ==========
+    def get_product_detail_name(self) -> str:
+        """获取商品详情页的产品名称"""
+        return self.page.locator(".product-information h2").inner_text()
+
+    def set_quantity_with_arrows(self, up_clicks: int = 0, down_clicks: int = 0) -> None:
+        """通过键盘上下箭头调整商品数量"""
+        qty_input = self.page.get_by_role("spinbutton")
+        qty_input.click()
+        for _ in range(up_clicks):
+            qty_input.press("ArrowUp")
+        for _ in range(down_clicks):
+            qty_input.press("ArrowDown")
+
+    def get_quantity(self) -> int:
+        """获取商品详情页当前数量"""
+        return int(self.page.get_by_role("spinbutton").input_value())
+
+    # ========== 评论 ==========
+    def submit_review(self, name: str, email: str, review: str) -> None:
+        """填写并提交商品评论"""
+        review_section = self.page.locator("#reviews")
+        review_section.get_by_placeholder("Your Name").fill(name)
+        review_section.get_by_placeholder("Email Address").fill(email)
+        review_section.get_by_placeholder("Add Review Here!").fill(review)
+        review_section.get_by_role("button", name="Submit").click()
+
+    def expect_review_submitted(self) -> None:
+        """验证评论提交成功"""
+        expect(self.page.get_by_text("Thank you for your review.")).to_be_visible()
 
     # ========== 购物车 ==========
     def open_cart(self) -> None:
@@ -102,8 +141,9 @@ class ProductPage(BasePage):
         """清空购物车所有商品"""
         delete_buttons = self.page.locator(".cart_quantity_delete")
         while delete_buttons.count() > 0:
-            delete_buttons.first.click()
-            self.page.wait_for_timeout(500)
+            first_btn = delete_buttons.first
+            first_btn.click()
+            expect(first_btn).to_be_hidden()
 
     def get_cart_price(self, product_name: str) -> int:
         """获取购物车中商品单价"""
@@ -116,8 +156,8 @@ class ProductPage(BasePage):
         row = self.get_cart_row(product_name)
         return int(row.locator(".cart_quantity button").inner_text())
 
-    def get_cart_total(self, product_name: str) -> int:
-        """获取购物车中商品总价"""
+    def get_cart_row_total(self, product_name: str) -> int:
+        """获取购物车中某一行商品的小计"""
         row = self.get_cart_row(product_name)
         total_text = row.locator(".cart_total p").inner_text()
         return int(total_text.replace("Rs. ", ""))
@@ -130,8 +170,8 @@ class ProductPage(BasePage):
 
     def get_checkout_total_amount(self) -> int:
         """获取 checkout 页面的 Total Amount 金额"""
-        total_row = self.page.locator("td").filter(has_text="Total Amount")
-        amount_text = total_row.locator("xpath=following-sibling::td").inner_text()
+        total_row = self.page.locator("tr").filter(has_text="Total Amount")
+        amount_text = total_row.locator("td").last.inner_text()
         return int(amount_text.replace("Rs. ", ""))
 
     def expect_checkout_total_amount(self, expected_amount: int) -> None:
@@ -188,8 +228,11 @@ class ProductPage(BasePage):
         expect(self.page.locator(".modal-content")).to_be_visible()
 
     # ========== 发票 ==========
-    def download_invoice(self, save_path: str = r"D:\Downloads\\invoice.txt") -> None:
+    def download_invoice(self, save_path: str | None = None) -> None:
         """下载发票"""
+        if save_path is None:
+            save_path = str(Path(__file__).resolve().parent.parent / "reports" / "invoice.txt")
+        Path(save_path).parent.mkdir(parents=True, exist_ok=True)
         with self.page.expect_download() as download_info:
             self.page.get_by_text("Download Invoice").click()
         download = download_info.value

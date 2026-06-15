@@ -57,13 +57,13 @@ class ProductFlow:
         """验证购物车中商品的 price * quantity = total"""
         price = self.product_page.get_cart_price(product_name)
         quantity = self.product_page.get_cart_quantity(product_name)
-        total = self.product_page.get_cart_total(product_name)
+        total = self.product_page.get_cart_row_total(product_name)
         assert quantity == expected_quantity, f"Expected quantity {expected_quantity}, got {quantity}"
         assert total == price * quantity, f"Expected {price * quantity}, got {total}"
 
     def verify_checkout_total_amount(self, *product_names: str) -> None:
         """验证 checkout 页面的 Total Amount 等于各商品 cart total 之和"""
-        expected = sum(self.product_page.get_cart_total(name) for name in product_names)
+        expected = sum(self.product_page.get_cart_row_total(name) for name in product_names)
         self.product_page.expect_checkout_total_amount(expected)
 
     # ========== 删除商品 ==========

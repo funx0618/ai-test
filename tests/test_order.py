@@ -149,3 +149,35 @@ def test_login_while_checkout(page, default_user):
     # Step 6: 再次结算并支付
     product_flow.checkout_and_pay()
 
+
+def test_register_while_checkout(page):
+    """不登录状态下添加商品，结算时注册新用户，登录后进入购物车完成下单"""
+    product_flow = ProductFlow(page)
+    login_flow = LoginFlow(page)
+
+    # Step 1: 不登录，搜索并添加商品到购物车
+    product_flow.add_product_to_cart("Fancy Green Top", continue_shopping=False)
+
+    # Step 2: 从弹窗点击 View Cart 进入购物车
+    product_flow.product_page.view_cart()
+
+    # Step 3: 点击 Proceed To Checkout，弹出登录/注册弹窗
+    product_flow.product_page.click_proceed_to_checkout()
+    product_flow.product_page.click_register_login_from_modal()
+
+    # Step 4: 注册新用户（注册后自动登录）
+    login_flow.signup(name="checkout_user", email="checkout_user@test.com")
+    login_flow.verify_register_success()
+
+    # Step 5: 点击 Continue 进入首页
+    login_flow.login_page.continue_after_register()
+
+    # Step 6: 点击 Cart 进入购物车
+    product_flow.product_page.go_to_cart()
+
+    # Step 7: 结算并支付
+    product_flow.checkout_and_pay()
+
+    # Step 8: 清理 — 删除注册的账户
+    login_flow.delete_account()
+

@@ -113,3 +113,11 @@ def test_brands_count(page):
     # Step 2: 验证每个品牌的数量
     product_flow.verify_brands_product_count()
 
+
+def test_category(page):
+    """遍历所有分类并验证页面标题正确"""
+    product_flow = ProductFlow(page)
+
+    # 验证所有分类页面标题
+    product_flow.verify_categories()
+

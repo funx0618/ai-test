@@ -228,7 +228,39 @@ class ProductPage(BasePage):
     def get_brand_page_product_count(self) -> int:
         """获取当前品牌页面的商品数量"""
         return self.page.locator(".product-image-wrapper").count()
+    # ========== 分类 ==========
+    CATEGORY_ROOT = "#accordian .panel.panel-default"
 
+    def get_categories_info(self) -> list[dict]:
+        """获取左侧分类菜单的所有一级和二级分类名称"""
+        panels = self.page.locator(self.CATEGORY_ROOT)
+        categories = []
+        for i in range(panels.count()):
+            panel = panels.nth(i)
+            parent_name = panel.locator(".panel-title a").inner_text().strip()
+            panel.locator(".panel-title a").click()
+            subs = panel.locator(".panel-collapse ul li a")
+            sub_list = []
+            for j in range(subs.count()):
+                sub_list.append(subs.nth(j).inner_text().strip())
+            categories.append({"index": i, "parent": parent_name, "subs": sub_list})
+        return categories
+
+    def expect_category_page_title(self, parent_name: str, sub_name: str) -> None:
+        """验证分类页面标题为 '{Parent} - {Sub} Products'"""
+        parent_cap = parent_name.title()
+        sub_cap = sub_name.title()
+        expect(self.page.locator(".features_items h2.title")).to_have_text(
+            f"{parent_cap} - {sub_cap} Products"
+        )
+
+    def click_category_sub(self, panel_index: int, sub_name: str) -> None:
+        """展开指定面板并点击二级分类（用 nth 避免 filter 文本匹配冲突）"""
+        panel = self.page.locator(self.CATEGORY_ROOT).nth(panel_index)
+        panel.locator(".panel-title a").click()
+        panel.locator(".panel-collapse ul li a").filter(
+            has_text=sub_name
+        ).click()
     def expect_product_in_search_results(self, name: str) -> None:
         """验证搜索结果中包含指定商品"""
         products = self.page.locator(".features_items .productinfo p")

@@ -120,6 +120,16 @@ class ProductFlow:
                 f"Brand '{brand['name']}': expected {brand['count']}, got {actual}"
             )
 
+    def verify_categories(self) -> None:
+        """遍历所有分类并验证页面标题"""
+        self.open_products()
+        categories = self.product_page.get_categories_info()
+        for cat in categories:
+            for sub_name in cat["subs"]:
+                self.product_page.click_category_sub(cat["index"], sub_name)
+                self.product_page.expect_category_page_title(cat["parent"], sub_name)
+                self.page.goto(self.product_page.BASE_URL, wait_until="domcontentloaded")
+
     def verify_order_placed(self) -> None:
         """验证下单成功"""
         self.product_page.expect_order_placed()

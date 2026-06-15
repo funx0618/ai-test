@@ -25,13 +25,12 @@ def test_login(page):
 def test_existed_email(page):
     login_flow = LoginFlow(page)
 
-    # Step 1: 用已存在的邮箱尝试注册
-    login_flow.signup(
-        name="agent01",
-        email="agent01@qq.com",
-    )
+    # Step 1: 打开登录页，填写已存在的邮箱并点击 Signup
+    login_flow.open_login_page()
+    login_flow.login_page.fill_signup(name="agent01", email="agent01@qq.com")
+    login_flow.login_page.submit_signup(expect_navigate=False)
 
-    # Step 2: 验证提示
+    # Step 2: 验证提示（页面停留在登录页，不会跳转到注册页）
     login_flow.verify_email_already_exists()
 
 

@@ -64,9 +64,10 @@ class LoginPage(BasePage):
         self.page.locator(self.SIGNUP_NAME).fill(name)
         self.page.locator(self.SIGNUP_EMAIL).fill(email)
 
-    def submit_signup(self) -> None:
+    def submit_signup(self, expect_navigate: bool = True) -> None:
         self.page.get_by_role("button", name="Signup").click()
-        expect(self.page).to_have_url(re.compile(r".*/signup"))
+        if expect_navigate:
+            expect(self.page).to_have_url(re.compile(r".*/signup"))
 
     # signup() 已移至 LoginFlow，由 Flow 层负责完整的第一步注册流程
 

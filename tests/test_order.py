@@ -46,6 +46,9 @@ def test_check_out(logged_in_page):
     expected_total = stylish_total + sleeves_total
     product_flow.checkout_and_pay(download_invoice=True, expected_total_amount=expected_total)
 
+    # Step 6: 点击 Continue 返回首页
+    product_flow.product_page.continue_after_order()
+
 
 def test_product_detail_review_and_add_to_cart(logged_in_page, default_user):
     """商品详情页：调整数量、提交评论、加入购物车并验证"""

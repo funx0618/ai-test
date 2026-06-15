@@ -9,6 +9,7 @@ ProductFlow - 产品 & 购物车 & 结算的复合业务流程
 """
 
 import re
+from pathlib import Path
 
 from playwright.sync_api import Page, expect
 from pages.product_page import ProductPage
@@ -106,7 +107,20 @@ class ProductFlow:
         self.product_page.expect_order_placed()
 
         if download_invoice:
-            self.product_page.download_invoice()
+            save_path = self.product_page.download_invoice()
+            if expected_total_amount is not None:
+                self.verify_invoice_total_amount(save_path, expected_total_amount)
+
+    # ========== 发票验证 ==========
+    def verify_invoice_total_amount(self, invoice_path: str, expected_total_amount: int) -> None:
+        """验证发票文件中的 total purchase amount 与预期金额一致"""
+        invoice_text = Path(invoice_path).read_text(encoding="utf-8")
+        match = re.search(r"total purchase amount is (\d+)", invoice_text)
+        assert match, f"Could not find total amount in invoice: {invoice_text}"
+        invoice_total = int(match.group(1))
+        assert invoice_total == expected_total_amount, (
+            f"Invoice total {invoice_total} != expected {expected_total_amount}"
+        )
 
     def verify_brands_product_count(self) -> None:
         """验证每个品牌侧边栏显示的数量与品牌页面实际商品数一致"""

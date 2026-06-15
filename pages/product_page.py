@@ -214,6 +214,10 @@ class ProductPage(BasePage):
         """验证下单成功"""
         expect(self.page.get_by_text("Order Placed!")).to_be_visible()
 
+    def continue_after_order(self) -> None:
+        """点击下单成功页的 Continue 按钮，返回首页"""
+        self.page.get_by_role("link", name="Continue").click()
+
     # ========== 品牌 ==========
     def get_brands_info(self) -> list[dict]:
         """获取侧边栏所有品牌信息：名称、预期数量、链接"""
@@ -294,8 +298,8 @@ class ProductPage(BasePage):
         expect(self.page).to_have_url(re.compile(r".*/view_cart"))
 
     # ========== 发票 ==========
-    def download_invoice(self, save_path: str | None = None) -> None:
-        """下载发票"""
+    def download_invoice(self, save_path: str | None = None) -> str:
+        """下载发票，返回保存路径"""
         if save_path is None:
             save_path = str(Path(__file__).resolve().parent.parent / "reports" / "invoice.txt")
         Path(save_path).parent.mkdir(parents=True, exist_ok=True)
@@ -303,3 +307,4 @@ class ProductPage(BasePage):
             self.page.get_by_text("Download Invoice").click()
         download = download_info.value
         download.save_as(save_path)
+        return save_path

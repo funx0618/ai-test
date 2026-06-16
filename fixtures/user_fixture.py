@@ -2,7 +2,7 @@
 User fixtures - 用户数据 & 预登录会话
 
 作用：
-  - 提供 default_user fixture（从硬编码或 data/users.json 加载测试账号）
+  - 提供 default_user fixture（从 data/test_users.json 加载测试账号）
   - 提供 logged_in_page fixture（返回已登录状态的 page，省去每个 test 手动登录）
 
 为什么需要这一层：
@@ -15,16 +15,11 @@ import pytest
 from playwright.sync_api import Page
 from pages.login_page import LoginPage
 from flows.login_flow import LoginFlow
+from utils.data_loader import load_test_users
 
 
 # ========== 测试账号数据 ==========
-# 后续可改为从 data/users.json 读取
-DEFAULT_USER = {
-    "name": "agent01",
-    "email": "agent01@qq.com",
-    "password": "123456",
-    "username": "agent01",
-}
+DEFAULT_USER = load_test_users()["login"]
 
 
 

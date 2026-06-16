@@ -1,0 +1,31 @@
+{
+  "product_search": "Stylish Dress",
+  "check_out": [
+    {
+      "name": "Stylish Dress",
+      "continue_shopping": true
+    },
+    {
+      "name": "Sleeves Top and Short - Blue & Pink",
+      "continue_shopping": false
+    }
+  ],
+  "remove_product_from_cart": [
+    {
+      "name": "Stylish Dress",
+      "continue_shopping": true
+    },
+    {
+      "name": "Sleeves Top and Short - Blue & Pink",
+      "continue_shopping": false
+    }
+  ],
+  "login_while_checkout": {
+    "name": "Fancy Green Top",
+    "continue_shopping": false
+  },
+  "register_while_checkout": {
+    "name": "Fancy Green Top",
+    "continue_shopping": false
+  }
+}

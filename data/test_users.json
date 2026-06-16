@@ -1,0 +1,20 @@
+{
+  "login": {
+    "name": "agent01",
+    "email": "agent01@qq.com",
+    "password": "123456",
+    "username": "agent01"
+  },
+  "existed_email": {
+    "name": "agent01",
+    "email": "agent01@qq.com"
+  },
+  "login_error_password": {
+    "email": "agent01@qq.com",
+    "password": "1234"
+  },
+  "login_error_email": {
+    "email": "wrong@qq.com",
+    "password": "123456"
+  }
+}

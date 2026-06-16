@@ -2,48 +2,54 @@
 test_order.py - 产品 & 订单相关测试
 
 使用 ProductFlow + ProductPage 进行产品操作和验证
+
+测试数据：从 data/test_products.json 加载
 """
 
 from flows.product_flow import ProductFlow
 from flows.login_flow import LoginFlow
+from utils.data_loader import load_test_products, load_test_users, generate_random_user
+
+PRODUCTS = load_test_products()
+USERS = load_test_users()
 
 
 def test_product_search(page):
-    """搜索商品 Stylish Dress 并验证查询结果"""
+    """搜索商品并验证查询结果"""
     product_flow = ProductFlow(page)
+    keyword = PRODUCTS["product_search"]
 
     # Step 1: 搜索商品
-    product_flow.search_product("Stylish Dress")
+    product_flow.search_product(keyword)
 
-    # Step 2: 验证搜索结果中包含 Stylish Dress
-    product_flow.product_page.expect_product_in_search_results("Stylish Dress")
+    # Step 2: 验证搜索结果中包含该商品
+    product_flow.product_page.expect_product_in_search_results(keyword)
 
 
 def test_check_out(logged_in_page):
     """添加两件商品到购物车，结算并验证价格，下载小票"""
     page = logged_in_page
     product_flow = ProductFlow(page)
+    checkout_items = PRODUCTS["check_out"]
 
     # Step 0: 清空购物车（避免之前测试遗留的商品影响）
     product_flow.clear_cart()
 
-    # Step 1: 搜索并添加 Stylish Dress（1件，留在产品页继续选）
-    product_flow.add_product_to_cart("Stylish Dress", continue_shopping=True)
-
-    # Step 2: 搜索并添加 Sleeves Top and Short - Blue & Pink（1件，弹窗保持可见）
-    product_flow.add_product_to_cart("Sleeves Top and Short - Blue & Pink", continue_shopping=False)
+    # Step 1 & 2: 依次搜索并添加商品到购物车
+    for item in checkout_items:
+        product_flow.add_product_to_cart(item["name"], continue_shopping=item["continue_shopping"])
 
     # Step 3: 从弹窗点击 View Cart 进入购物车
     product_flow.product_page.view_cart()
 
-    # Step 4: 验证购物车中两件商品的价格
-    product_flow.verify_cart_price("Stylish Dress", expected_quantity=1)
-    product_flow.verify_cart_price("Sleeves Top and Short - Blue & Pink", expected_quantity=1)
+    # Step 4: 验证购物车中每件商品的价格
+    for item in checkout_items:
+        product_flow.verify_cart_price(item["name"], expected_quantity=1)
 
     # Step 5: 下单并支付（含 Total Amount 验证），下载小票
-    stylish_total = product_flow.product_page.get_cart_row_total("Stylish Dress")
-    sleeves_total = product_flow.product_page.get_cart_row_total("Sleeves Top and Short - Blue & Pink")
-    expected_total = stylish_total + sleeves_total
+    expected_total = sum(
+        product_flow.product_page.get_cart_row_total(item["name"]) for item in checkout_items
+    )
     product_flow.checkout_and_pay(download_invoice=True, expected_total_amount=expected_total)
 
     # Step 6: 点击 Continue 返回首页
@@ -105,25 +111,26 @@ def test_remove_product_from_cart(logged_in_page):
     """从购物车中删除商品并验证"""
     page = logged_in_page
     product_flow = ProductFlow(page)
+    remove_items = PRODUCTS["remove_product_from_cart"]
 
     # Step 0: 清空购物车
     product_flow.clear_cart()
 
     # Step 1: 添加两件商品到购物车
-    product_flow.add_product_to_cart("Stylish Dress", continue_shopping=True)
-    product_flow.add_product_to_cart("Sleeves Top and Short - Blue & Pink", continue_shopping=False)
+    for item in remove_items:
+        product_flow.add_product_to_cart(item["name"], continue_shopping=item["continue_shopping"])
     product_flow.product_page.view_cart()
 
     # Step 2: 验证两件商品都在购物车中
-    product_flow.verify_product_in_cart("Stylish Dress")
-    product_flow.verify_product_in_cart("Sleeves Top and Short - Blue & Pink")
+    for item in remove_items:
+        product_flow.verify_product_in_cart(item["name"])
 
-    # Step 3: 删除 Stylish Dress
-    product_flow.remove_product_from_cart("Stylish Dress")
+    # Step 3: 删除第一件商品
+    product_flow.remove_product_from_cart(remove_items[0]["name"])
 
-    # Step 4: 验证 Stylish Dress 已删除，另一件仍存在
-    product_flow.verify_product_not_in_cart("Stylish Dress")
-    product_flow.verify_product_in_cart("Sleeves Top and Short - Blue & Pink")
+    # Step 4: 验证第一件已删除，其余仍存在
+    product_flow.verify_product_not_in_cart(remove_items[0]["name"])
+    product_flow.verify_product_in_cart(remove_items[1]["name"])
 
 
 def test_brands_count(page):
@@ -149,9 +156,10 @@ def test_login_while_checkout(page, default_user):
     """不登录状态下添加商品，结算时触发登录，完成下单"""
     product_flow = ProductFlow(page)
     login_flow = LoginFlow(page)
+    checkout_product = PRODUCTS["login_while_checkout"]
 
     # Step 1: 不登录，直接进入产品页搜索并添加商品到购物车
-    product_flow.add_product_to_cart("Fancy Green Top", continue_shopping=False)
+    product_flow.add_product_to_cart(checkout_product["name"], continue_shopping=checkout_product["continue_shopping"])
 
     # Step 2: 从弹窗点击 View Cart 进入购物车
     product_flow.product_page.view_cart()
@@ -176,9 +184,11 @@ def test_register_while_checkout(page):
     """不登录状态下添加商品，结算时注册新用户，登录后进入购物车完成下单"""
     product_flow = ProductFlow(page)
     login_flow = LoginFlow(page)
+    checkout_product = PRODUCTS["register_while_checkout"]
+    user = generate_random_user()
 
     # Step 1: 不登录，搜索并添加商品到购物车
-    product_flow.add_product_to_cart("Fancy Green Top", continue_shopping=False)
+    product_flow.add_product_to_cart(checkout_product["name"], continue_shopping=checkout_product["continue_shopping"])
 
     # Step 2: 从弹窗点击 View Cart 进入购物车
     product_flow.product_page.view_cart()
@@ -188,7 +198,7 @@ def test_register_while_checkout(page):
     product_flow.product_page.click_register_login_from_modal()
 
     # Step 4: 注册新用户（注册后自动登录）
-    login_flow.signup(name="checkout_user", email="checkout_user@test.com")
+    login_flow.signup(name=user["name"], email=user["email"])
     login_flow.verify_register_success()
 
     # Step 5: 点击 Continue 进入首页
@@ -208,14 +218,15 @@ def test_product_subscription(page):
     """在产品列表页滚动到底部，填写邮箱并订阅，验证成功提示"""
     product_flow = ProductFlow(page)
     login_flow = LoginFlow(page)
+    user = USERS["login"]
 
     # Step 1: 登录
     login_flow.login_as(
-        email="agent01@qq.com",
-        password="123456",
+        email=user["email"],
+        password=user["password"],
     )
-    login_flow.verify_login(username="agent01")
+    login_flow.verify_login(username=user["username"])
 
     # Step 2: 进入产品列表页，滚动到底部并订阅
-    product_flow.subscribe_on_products_page(email="2660185828+product@qq.com")
+    product_flow.subscribe_on_products_page(email=user["email"])
 

@@ -11,5 +11,6 @@ __pycache__/
 
 # Test output
 reports/
-screenshots/
-traces/
+
+# Environment variables (API keys)
+.env

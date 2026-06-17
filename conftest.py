@@ -3,27 +3,23 @@ Root conftest.py - 注册 fixtures & 测试生命周期 hook
 
 作用：
   1. 导入 fixtures/ 中的 fixture，让 pytest 自动发现
-  2. 测试失败时自动保存 trace.zip 和 screenshot
+  2. 测试失败时自动运行 AI Failure Analysis 并输出报告
 """
 
-import os
-from datetime import datetime
+import traceback
 
 import pytest
 
 # 导入自定义 fixtures，让 pytest 自动发现
-from fixtures.browser_fixture import browser, context, page, _ensure_output_dirs
+from fixtures.browser_fixture import browser, context, page
 from fixtures.user_fixture import default_user, login_page, login_flow, logged_in_page
-
-# 项目根目录
-_PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
-TRACES_DIR = os.path.join(_PROJECT_ROOT, "traces")
-SCREENSHOTS_DIR = os.path.join(_PROJECT_ROOT, "screenshots")
+from ai.agent import analyze_with_ai
+from utils.failure_analyzer import format_report, save_report
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
-    """测试失败时自动保存 trace 和 screenshot。"""
+    """测试失败时自动保存 trace、screenshot 并运行 AI Failure Analysis。"""
     outcome = yield
     report = outcome.get_result()
 
@@ -36,19 +32,28 @@ def pytest_runtest_makereport(item, call):
     if not page_obj:
         return
 
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    safe_name = item.nodeid.replace("/", "_").replace("::", "_").replace(":", "")
+    # ===== AI Failure Analysis =====
+    # 提取错误信息
+    exc_info = call.excinfo
+    if exc_info is not None:
+        error_lines = traceback.format_exception_only(exc_info.type, exc_info.value)
+        error_message = "".join(error_lines).strip()
+    else:
+        error_message = str(report.longrepr) if report.longrepr else "Unknown error"
 
-    # 保存 screenshot
-    try:
-        ss_path = os.path.join(SCREENSHOTS_DIR, f"{safe_name}_{ts}.png")
-        page_obj.screenshot(path=ss_path, full_page=True)
-    except Exception:
-        pass
+    test_name = item.nodeid.split("::")[-1]
 
-    # 保存 trace
-    try:
-        trace_path = os.path.join(TRACES_DIR, f"{safe_name}_{ts}.zip")
-        page_obj.context.tracing.stop(path=trace_path)
-    except Exception:
-        pass
+    # 运行 AI Agent 分析
+    analysis = analyze_with_ai(
+        test_name=test_name,
+        error_message=error_message,
+        page_obj=page_obj,
+        stack_trace="".join(traceback.format_exception(call.excinfo.type, call.excinfo.value, call.excinfo.tb)) if call.excinfo else "",
+    )
+
+    # 保存报告到 reports/ 目录
+    report_path = save_report(analysis)
+
+    # 输出报告到终端
+    print("\n" + format_report(analysis))
+    print(f"\n📄 Failure analysis report saved to: {report_path}")

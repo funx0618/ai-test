@@ -9,6 +9,7 @@ Root conftest.py - 注册 fixtures & 测试生命周期 hook
 import traceback
 
 import pytest
+import allure
 
 # 导入自定义 fixtures，让 pytest 自动发现
 from fixtures.browser_fixture import browser, context, page
@@ -51,9 +52,18 @@ def pytest_runtest_makereport(item, call):
         stack_trace="".join(traceback.format_exception(call.excinfo.type, call.excinfo.value, call.excinfo.tb)) if call.excinfo else "",
     )
 
-    # 保存报告到 reports/ 目录
+    # 保存报告到 reports/ 目录（txt 文件）
     report_path = save_report(analysis)
 
-    # 输出报告到终端
-    print("\n" + format_report(analysis))
-    print(f"\n📄 Failure analysis report saved to: {report_path}")
+    # 将 AI 分析报告附加到 Allure 报告中
+    try:
+        # 1) 附加原始 txt 文件
+        allure.attach.file(
+            report_path,
+            name="AI Failure Analysis (txt)",
+            attachment_type=allure.attachment_type.TEXT,
+        )
+
+
+    except Exception:
+        pass

@@ -11,6 +11,8 @@ __pycache__/
 
 # Test output
 reports/
+allure-report/
+allure-results/
 
 # Environment variables (API keys)
 .env
